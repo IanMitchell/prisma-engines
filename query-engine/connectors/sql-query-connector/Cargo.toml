@@ -17,7 +17,7 @@ tokio = "=0.2.13"
 uuid = "0.8"
 
 [dependencies.quaint]
-features = ["full", "tracing-log"]
+features = ["full", "tracing-log", "serde-support"]
 git = "https://github.com/prisma/quaint"
 
 [dependencies.connector-interface]

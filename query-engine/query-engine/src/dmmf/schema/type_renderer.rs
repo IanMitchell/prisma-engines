@@ -6,17 +6,17 @@ pub enum DMMFTypeRenderer<'a> {
     Output(&'a OutputType),
 }
 
-impl<'a> Renderer<'a, DMMFTypeInfo> for DMMFTypeRenderer<'a> {
-    fn render(&self, ctx: &mut RenderContext) -> DMMFTypeInfo {
-        match self {
-            DMMFTypeRenderer::Input(i) => self.render_input_type(i, ctx),
-            DMMFTypeRenderer::Output(o) => self.render_output_type(o, ctx),
-        }
-    }
-}
+// impl<'a> Renderer<'a> for DMMFTypeRenderer<'a> {
+//     fn render(&self, ctx: &mut RenderContext) {
+//         match self {
+//             DMMFTypeRenderer::Input(i) => ctx.add_input_type(self.render_input_type(i, ctx)),
+//             DMMFTypeRenderer::Output(o) => self.render_output_type(o, ctx),
+//         }
+//     }
+// }
 
 impl<'a> DMMFTypeRenderer<'a> {
-    fn render_input_type(&self, i: &InputType, ctx: &mut RenderContext) -> DMMFTypeInfo {
+    pub fn render_input_type(&self, i: &'a InputType, ctx: &mut RenderContext<'a>) -> DMMFTypeInfo {
         match i {
             InputType::Object(ref obj) => {
                 obj.into_renderer().render(ctx);
@@ -105,10 +105,10 @@ impl<'a> DMMFTypeRenderer<'a> {
     }
 
     // WIP dedup code
-    fn render_output_type(&self, o: &OutputType, ctx: &mut RenderContext) -> DMMFTypeInfo {
+    pub fn render_output_type(&self, o: &'a OutputType, ctx: &mut RenderContext<'a>) -> DMMFTypeInfo {
         match o {
             OutputType::Object(ref obj) => {
-                obj.into_renderer().render(ctx);
+                ctx.to_be_rendered.push(Box::new(obj.into_renderer()));
                 let type_info = DMMFTypeInfo {
                     typ: obj.into_arc().name().to_string(),
                     kind: TypeKind::Object,

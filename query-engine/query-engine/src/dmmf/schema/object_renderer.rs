@@ -6,7 +6,7 @@ pub enum DMMFObjectRenderer {
     Output(ObjectTypeRef),
 }
 
-impl<'a> Renderer<'a, ()> for DMMFObjectRenderer {
+impl<'a> Renderer<'a> for DMMFObjectRenderer {
     fn render(&self, ctx: &mut RenderContext) {
         match &self {
             DMMFObjectRenderer::Input(input) => self.render_input_object(input, ctx),
@@ -29,11 +29,11 @@ impl DMMFObjectRenderer {
         let mut rendered_fields = Vec::with_capacity(fields.len());
 
         for field in fields {
-            let rendered_field = field.into_renderer().render(ctx);
-            match rendered_field {
-                DMMFFieldWrapper::Input(f) => rendered_fields.push(f),
-                _ => unreachable!(),
-            };
+            rendered_fields.push(render_dmmf_input_field(field, ctx));
+            // match rendered_field {
+            //     DMMFFieldWrapper::Input(f) => rendered_fields.push(f),
+            //     _ => unreachable!(),
+            // };
         }
 
         let input_type = DMMFInputType {
@@ -46,7 +46,7 @@ impl DMMFObjectRenderer {
     }
 
     // WIP dedup code
-    fn render_output_object(&self, output_object: &ObjectTypeRef, ctx: &mut RenderContext) {
+    fn render_output_object(&self, output_object: &ObjectTypeRef, ctx: &mut RenderContext<'_>) {
         let output_object = output_object.into_arc();
         if ctx.already_rendered(output_object.name()) {
             return;
@@ -59,12 +59,13 @@ impl DMMFObjectRenderer {
         let mut rendered_fields: Vec<DMMFField> = Vec::with_capacity(fields.len());
 
         for field in fields {
-            let rendered_field = field.into_renderer().render(ctx);
+            rendered_fields.push(render_dmmf_output_field(field, ctx))
+            // let rendered_field = field.into_renderer().render(ctx);
 
-            match rendered_field {
-                DMMFFieldWrapper::Output(f) => rendered_fields.push(f),
-                _ => unreachable!(),
-            }
+            // match rendered_field {
+            //     DMMFFieldWrapper::Output(f) => rendered_fields.push(f),
+            //     _ => unreachable!(),
+            // }
         }
 
         let output_type = DMMFOutputType {
