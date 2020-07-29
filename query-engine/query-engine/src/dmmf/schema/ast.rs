@@ -53,11 +53,11 @@ pub struct DMMFInputField {
     pub input_type: DMMFTypeInfo,
 }
 
-// /// Intermediate type for generic field passing during serialization.
-// pub enum DMMFFieldWrapper {
-//     Input(DMMFInputField),
-//     Output(DMMFField),
-// }
+/// Intermediate type for generic field passing during serialization.
+pub enum DMMFFieldWrapper {
+    Input(DMMFInputField),
+    Output(DMMFField),
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

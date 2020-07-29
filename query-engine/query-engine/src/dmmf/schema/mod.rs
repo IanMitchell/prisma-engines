@@ -12,7 +12,10 @@ use field_renderer::*;
 use object_renderer::*;
 use query_core::schema::*;
 use schema_renderer::*;
-use std::{collections::HashSet, sync::Weak};
+use std::{
+    collections::HashSet,
+    sync::{Arc, Weak},
+};
 use type_renderer::*;
 
 pub use ast::*;
@@ -28,7 +31,7 @@ impl QuerySchemaRenderer<(DMMFSchema, Vec<DMMFMapping>)> for DMMFQuerySchemaRend
     }
 }
 
-pub struct RenderContext<'a> {
+pub struct RenderContext {
     /// Aggregator for query schema
     schema: DMMFSchema,
 
@@ -38,20 +41,14 @@ pub struct RenderContext<'a> {
     /// Prevents double rendering of elements that are referenced multiple times.
     /// Names of input / output types / enums / models are globally unique.
     rendered: HashSet<String>,
-
-    /// The queue of elements that still need to be rendered. This is filled in
-    /// with the top-level initially, and each iteration will add its unrendered
-    /// dependencies, until there is no more.
-    to_be_rendered: Vec<Box<dyn Renderer<'a>>>,
 }
 
-impl<'a> RenderContext<'a> {
+impl RenderContext {
     pub fn new() -> Self {
         RenderContext {
             schema: DMMFSchema::new(),
             mappings: vec![],
             rendered: HashSet::new(),
-            to_be_rendered: Vec::new(),
         }
     }
 
@@ -106,46 +103,58 @@ impl<'a> RenderContext<'a> {
     }
 }
 
-pub trait Renderer<'a> {
-    fn render(&self, ctx: &mut RenderContext<'a>);
+pub trait Renderer<'a, T> {
+    fn render(&self, ctx: &mut RenderContext) -> T;
 }
 
-trait IntoRenderer<'a> {
-    fn into_renderer(&'a self) -> Box<dyn Renderer<'a> + 'a>;
+trait IntoRenderer<'a, T> {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, T> + 'a>;
 }
 
-impl<'a> IntoRenderer<'a> for QuerySchemaRef {
-    fn into_renderer(&'a self) -> Box<dyn Renderer<'a> + 'a> {
-        Box::new(DMMFSchemaRenderer::new(self))
+impl<'a> IntoRenderer<'a, ()> for QuerySchemaRef {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, ()> + 'a> {
+        Box::new(DMMFSchemaRenderer::new(Arc::clone(self)))
     }
 }
 
-// impl<'a> IntoRenderer<'a> for OutputTypeRef {
-//     fn into_renderer(&'a self) -> Box<dyn Renderer<'a> + 'a> {
-//         Box::new(DMMFTypeRenderer::Output(self))
-//     }
-// }
+impl<'a> IntoRenderer<'a, DMMFTypeInfo> for OutputType {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, DMMFTypeInfo> + 'a> {
+        Box::new(DMMFTypeRenderer::Output(self))
+    }
+}
 
-// impl<'a> IntoRenderer<'a, DMMFTypeInfo> for InputType {
-//     fn into_renderer(&'a self) -> Box<dyn Renderer<'a, DMMFTypeInfo> + 'a> {
-//         Box::new(DMMFTypeRenderer::Input(self))
-//     }
-// }
+impl<'a> IntoRenderer<'a, DMMFTypeInfo> for InputType {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, DMMFTypeInfo> + 'a> {
+        Box::new(DMMFTypeRenderer::Input(self))
+    }
+}
 
-impl<'a> IntoRenderer<'a> for EnumType {
-    fn into_renderer(&'a self) -> Box<dyn Renderer<'a> + 'a> {
+impl<'a> IntoRenderer<'a, ()> for EnumType {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, ()> + 'a> {
         Box::new(DMMFEnumRenderer::new(self))
     }
 }
 
-impl<'a> IntoRenderer<'a> for InputObjectTypeRef {
-    fn into_renderer(&'a self) -> Box<dyn Renderer<'a> + 'a> {
+impl<'a> IntoRenderer<'a, DMMFFieldWrapper> for InputFieldRef {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, DMMFFieldWrapper> + 'a> {
+        Box::new(DMMFFieldRenderer::Input(Arc::clone(self)))
+    }
+}
+
+impl<'a> IntoRenderer<'a, DMMFFieldWrapper> for FieldRef {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, DMMFFieldWrapper> + 'a> {
+        Box::new(DMMFFieldRenderer::Output(Arc::clone(self)))
+    }
+}
+
+impl<'a> IntoRenderer<'a, ()> for InputObjectTypeRef {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, ()> + 'a> {
         Box::new(DMMFObjectRenderer::Input(Weak::clone(self)))
     }
 }
 
-impl<'a> IntoRenderer<'a> for ObjectTypeRef {
-    fn into_renderer(&'a self) -> Box<dyn Renderer<'a> + 'a> {
+impl<'a> IntoRenderer<'a, ()> for ObjectTypeRef {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, ()> + 'a> {
         Box::new(DMMFObjectRenderer::Output(Weak::clone(self)))
     }
 }

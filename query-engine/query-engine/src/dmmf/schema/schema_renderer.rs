@@ -1,20 +1,18 @@
 use super::*;
 
-pub struct DMMFSchemaRenderer<'a> {
-    query_schema: &'a QuerySchemaRef,
+pub struct DMMFSchemaRenderer {
+    query_schema: QuerySchemaRef,
 }
 
-impl<'a> Renderer<'a> for DMMFSchemaRenderer<'a> {
-    fn render(&self, ctx: &mut RenderContext<'a>) {
-        DMMFTypeRenderer::Output(self.query_schema.query.as_ref())
-            .render_output_type(self.query_schema.query.as_ref(), ctx);
-        DMMFTypeRenderer::Output(self.query_schema.mutation.as_ref())
-            .render_output_type(self.query_schema.mutation.as_ref(), ctx);
+impl<'a> Renderer<'a, ()> for DMMFSchemaRenderer {
+    fn render(&self, ctx: &mut RenderContext) {
+        self.query_schema.query.into_renderer().render(ctx);
+        self.query_schema.mutation.into_renderer().render(ctx);
     }
 }
 
-impl<'a> DMMFSchemaRenderer<'a> {
-    pub fn new(query_schema: &'a QuerySchemaRef) -> DMMFSchemaRenderer<'a> {
+impl DMMFSchemaRenderer {
+    pub fn new(query_schema: QuerySchemaRef) -> DMMFSchemaRenderer {
         DMMFSchemaRenderer { query_schema }
     }
 }
