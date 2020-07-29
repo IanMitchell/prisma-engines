@@ -1,23 +1,24 @@
 use super::*;
 
 #[derive(Debug)]
-pub enum DMMFObjectRenderer {
-    Input(InputObjectTypeRef),
-    Output(ObjectTypeRef),
+pub enum DMMFObjectRenderer<'a> {
+    Input(&'a InputObjectTypeRef),
+    Output(&'a ObjectTypeRef),
 }
 
-impl<'a> Renderer<'a, ()> for DMMFObjectRenderer {
-    fn render(&self, ctx: &mut RenderContext) {
-        match &self {
+impl<'a> Renderer<'a> for DMMFObjectRenderer<'a> {
+    fn render(&self, ctx: &mut RenderContext<'a>) {
+        match self {
             DMMFObjectRenderer::Input(input) => self.render_input_object(input, ctx),
             DMMFObjectRenderer::Output(output) => self.render_output_object(output, ctx),
         }
     }
 }
 
-impl DMMFObjectRenderer {
-    fn render_input_object(&self, input_object: &InputObjectTypeRef, ctx: &mut RenderContext) {
+impl<'a> DMMFObjectRenderer<'a> {
+    fn render_input_object(&self, input_object: &'a InputObjectTypeRef, ctx: &mut RenderContext<'a>) {
         let input_object = input_object.into_arc();
+
         if ctx.already_rendered(&input_object.name) {
             return;
         } else {
@@ -29,11 +30,7 @@ impl DMMFObjectRenderer {
         let mut rendered_fields = Vec::with_capacity(fields.len());
 
         for field in fields {
-            let rendered_field = field.into_renderer().render(ctx);
-            match rendered_field {
-                DMMFFieldWrapper::Input(f) => rendered_fields.push(f),
-                _ => unreachable!(),
-            };
+            rendered_fields.push(render_input_field(field, ctx));
         }
 
         let input_type = DMMFInputType {
@@ -46,7 +43,7 @@ impl DMMFObjectRenderer {
     }
 
     // WIP dedup code
-    fn render_output_object(&self, output_object: &ObjectTypeRef, ctx: &mut RenderContext) {
+    fn render_output_object(&self, output_object: &ObjectTypeRef, ctx: &mut RenderContext<'a>) {
         let output_object = output_object.into_arc();
         if ctx.already_rendered(output_object.name()) {
             return;
@@ -59,12 +56,7 @@ impl DMMFObjectRenderer {
         let mut rendered_fields: Vec<DMMFField> = Vec::with_capacity(fields.len());
 
         for field in fields {
-            let rendered_field = field.into_renderer().render(ctx);
-
-            match rendered_field {
-                DMMFFieldWrapper::Output(f) => rendered_fields.push(f),
-                _ => unreachable!(),
-            }
+            rendered_fields.push(render_output_field(field, ctx));
         }
 
         let output_type = DMMFOutputType {
