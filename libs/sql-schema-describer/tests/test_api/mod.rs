@@ -27,7 +27,8 @@ impl TestApi {
             SqlFamily::Postgres => Box::new(sql_schema_describer::postgres::SqlSchemaDescriber::new(db)),
             SqlFamily::Sqlite => Box::new(sql_schema_describer::sqlite::SqlSchemaDescriber::new(db)),
             SqlFamily::Mysql => Box::new(sql_schema_describer::mysql::SqlSchemaDescriber::new(db)),
-            SqlFamily::Mssql => todo!("Greetings from Redmond"),
+            #[cfg(feature = "mssql")]
+            SqlFamily::Mssql => Box::new(sql_schema_describer::mssql::SqlSchemaDescriber::new(db)),
         };
 
         Ok(describer.describe(self.schema_name()).await?)
@@ -57,7 +58,8 @@ impl TestApi {
                 SqlFamily::Mysql => barrel::SqlVariant::Mysql,
                 SqlFamily::Postgres => barrel::SqlVariant::Pg,
                 SqlFamily::Sqlite => barrel::SqlVariant::Sqlite,
-                SqlFamily::Mssql => todo!("Hey Barrel, greetings from Redmond"),
+                #[cfg(feature = "mssql")]
+                SqlFamily::Mssql => barrel::SqlVariant::Mssql,
             },
         }
     }
@@ -181,6 +183,20 @@ pub async fn sqlite_test_api(db_name: &'static str) -> TestApi {
         connection_info: database.connection_info().to_owned(),
         database: Arc::new(database),
         sql_family: SqlFamily::Sqlite,
+    }
+}
+
+#[cfg(feature = "mssql")]
+pub async fn mssql_2019_test_api(db_name: &'static str) -> TestApi {
+    let connection_string = mssql_2019_url(db_name);
+    let database = Quaint::new(&connection_string).await.unwrap();
+
+    TestApi {
+        connector_name: "mssql2019",
+        db_name,
+        connection_info: database.connection_info().to_owned(),
+        database: Arc::new(database),
+        sql_family: SqlFamily::Mssql,
     }
 }
 

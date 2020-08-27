@@ -207,7 +207,7 @@ impl From<quaint::error::Error> for SqlError {
 
             e @ QuaintKind::ConnectionError(_) => Self::ConnectionError(e),
             QuaintKind::ColumnReadFailure(e) => Self::ColumnReadFailure(e),
-            QuaintKind::ColumnNotFound(_) => Self::ColumnDoesNotExist,
+            QuaintKind::ColumnNotFound { .. } => Self::ColumnDoesNotExist,
             QuaintKind::TableDoesNotExist { table } => SqlError::TableDoesNotExist(table),
             e @ QuaintKind::ConversionError(_) => SqlError::ConversionError(e.into()),
             e @ QuaintKind::ResultIndexOutOfBounds { .. } => SqlError::QueryError(e.into()),

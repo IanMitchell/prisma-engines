@@ -29,3 +29,6 @@ tracing = "0.1.10"
 tracing-error = "0.1.2"
 tracing-futures = "0.2.0"
 url = "2.1.1"
+
+[features]
+mssql = ["sql-schema-describer/mssql"]

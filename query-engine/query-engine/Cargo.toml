@@ -7,7 +7,7 @@ version = "0.1.0"
 [features]
 default = ["sql", "graphql"]
 graphql = ["graphql-parser"]
-mssql = ["datamodel/mssql", "sql-connector/mssql"]
+mssql = ["datamodel/mssql", "sql-connector/mssql", "introspection-core/mssql", "migration-core/mssql"]
 sql = ["sql-connector"]
 
 [dependencies]
@@ -58,6 +58,6 @@ migration-connector = {path = "../../migration-engine/connectors/migration-conne
 migration-core = {path = "../../migration-engine/core"}
 quaint = {git = "https://github.com/prisma/quaint", features = ["full", "tracing-log"]}
 serial_test = "*"
-sql-migration-connector = {path = "../../migration-engine/connectors/sql-migration-connector"}
-test-macros = {path = "../../libs/test-macros"}
-test-setup = {path = "../../libs/test-setup"}
+sql-migration-connector = {path = "../../migration-engine/connectors/sql-migration-connector", features = ["mssql"]}
+test-macros = {path = "../../libs/test-macros", features = ["mssql"]}
+test-setup = {path = "../../libs/test-setup", features = ["mssql"]}

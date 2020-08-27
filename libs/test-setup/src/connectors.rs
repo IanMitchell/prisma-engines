@@ -18,6 +18,7 @@ fn connector_names() -> Vec<(&'static str, Tags)> {
         ("postgres13", Tags::POSTGRES),
         ("mysql_mariadb", Tags::MYSQL | Tags::MARIADB),
         ("sqlite", Tags::SQLITE),
+        ("mssql_2019", Tags::MSSQL_2019),
     ]
 }
 
@@ -33,6 +34,11 @@ fn mysql_5_6_capabilities() -> Capabilities {
     Capabilities::ENUMS
 }
 
+#[cfg(feature = "mssql")]
+fn mssql_2019_capabilities() -> Capabilities {
+    Capabilities::empty()
+}
+
 fn infer_capabilities(tags: Tags) -> Capabilities {
     if tags.intersects(Tags::POSTGRES) {
         return postgres_capabilities();
@@ -44,6 +50,11 @@ fn infer_capabilities(tags: Tags) -> Capabilities {
 
     if tags.intersects(Tags::MYSQL) {
         return mysql_capabilities();
+    }
+
+    #[cfg(feature = "mssql")]
+    if tags.intersects(Tags::MSSQL_2019) {
+        return mssql_2019_capabilities();
     }
 
     Capabilities::empty()

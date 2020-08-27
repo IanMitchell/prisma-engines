@@ -34,3 +34,6 @@ barrel = {version = "0.6.5-alpha.0", features = ["sqlite3", "mysql", "pg"]}
 pretty_assertions = "0.6.1"
 test-macros = {path = "../../../libs/test-macros"}
 test-setup = {path = "../../../libs/test-setup"}
+
+[features]
+mssql = ["sql-schema-describer/mssql"]

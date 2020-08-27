@@ -31,6 +31,7 @@ quaint = { git = "https://github.com/prisma/quaint" }
 [features]
 default = ["sql"]
 sql = ["migration-core/sql"]
+mssql = ["migration-core/mssql"]
 
 [[bin]]
 name = "migration-engine"

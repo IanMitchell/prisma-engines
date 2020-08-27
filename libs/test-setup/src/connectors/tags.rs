@@ -3,14 +3,20 @@ use std::{error::Error as StdError, str::FromStr};
 
 bitflags! {
     pub struct Tags: u8 {
-        const MYSQL     = 0b00000001;
-        const MARIADB   = 0b00000010;
-        const POSTGRES  = 0b00000100;
-        const SQLITE    = 0b00001000;
-        const MYSQL_8   = 0b00010000;
-        const MYSQL_5_6 = 0b00100000;
+        const MYSQL      = 0b00000001;
+        const MARIADB    = 0b00000010;
+        const POSTGRES   = 0b00000100;
+        const SQLITE     = 0b00001000;
+        const MYSQL_8    = 0b00010000;
+        const MYSQL_5_6  = 0b00100000;
+        #[cfg(feature = "mssql")]
+        const MSSQL_2019 = 0b01000000;
 
-        const SQL = Self::MYSQL.bits | Self::POSTGRES.bits | Self::SQLITE.bits;
+        const SQL = if cfg!(feature = "mssql") {
+            Self::MYSQL.bits | Self::POSTGRES.bits | Self::SQLITE.bits | Self::MSSQL_2019.bits
+        } else {
+            Self::MYSQL.bits | Self::POSTGRES.bits | Self::SQLITE.bits
+        };
     }
 }
 
@@ -42,6 +48,8 @@ impl FromStr for Tags {
 /// All the tags, sorted by name.
 const TAG_NAMES: &[(&str, Tags)] = &[
     ("mariadb", Tags::MARIADB),
+    #[cfg(feature = "mssql")]
+    ("mssql_2019", Tags::MSSQL_2019),
     ("mysql", Tags::MYSQL),
     ("mysql_5_6", Tags::MYSQL_5_6),
     ("mysql_8", Tags::MYSQL_8),

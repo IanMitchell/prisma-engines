@@ -27,3 +27,4 @@ url = "2"
 [features]
 default = ["sql"]
 sql = ["quaint", "sql-migration-connector"]
+mssql = ["sql-migration-connector/mssql"]

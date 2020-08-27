@@ -12,6 +12,8 @@ use std::{fmt, str::FromStr};
 use thiserror::Error;
 use tracing::debug;
 
+#[cfg(feature = "mssql")]
+pub mod mssql;
 pub mod mysql;
 pub mod postgres;
 pub mod sqlite;

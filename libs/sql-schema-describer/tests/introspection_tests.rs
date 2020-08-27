@@ -5,6 +5,8 @@ use sql_schema_describer::*;
 use test_macros::test_each_connector;
 
 mod common;
+#[cfg(feature = "mssql")]
+mod mssql;
 mod mysql;
 mod postgres;
 mod sqlite;
@@ -20,6 +22,7 @@ fn int_full_data_type(api: &TestApi) -> String {
         (SqlFamily::Sqlite, _) => "INTEGER".to_string(),
         (SqlFamily::Mysql, "mysql8") => "int".to_string(),
         (SqlFamily::Mysql, _) => "int(11)".to_string(),
+        #[cfg(feature = "mssql")]
         (SqlFamily::Mssql, _) => "int".to_string(),
     }
 }
@@ -30,6 +33,7 @@ fn int_data_type(api: &TestApi) -> String {
         (SqlFamily::Sqlite, _) => "INTEGER".to_string(),
         (SqlFamily::Mysql, "mysql8") => "int".to_string(),
         (SqlFamily::Mysql, _) => "int".to_string(),
+        #[cfg(feature = "mssql")]
         (SqlFamily::Mssql, _) => "int".to_string(),
     }
 }
@@ -40,6 +44,7 @@ fn varchar_data_type(api: &TestApi, length: u64) -> String {
         (SqlFamily::Sqlite, _) => format!("VARCHAR({})", length),
         (SqlFamily::Mysql, "mysql8") => "varchar".to_string(),
         (SqlFamily::Mysql, _) => "varchar".to_string(),
+        #[cfg(feature = "mssql")]
         (SqlFamily::Mssql, _) => format!("NVARCHAR({})", length),
     }
 }
@@ -50,6 +55,7 @@ fn varchar_full_data_type(api: &TestApi, length: u64) -> String {
         (SqlFamily::Sqlite, _) => format!("VARCHAR({})", length),
         (SqlFamily::Mysql, "mysql8") => format!("varchar({})", length),
         (SqlFamily::Mysql, _) => format!("varchar({})", length),
+        #[cfg(feature = "mssql")]
         (SqlFamily::Mssql, _) => format!("NVARCHAR({})", length),
     }
 }
@@ -162,7 +168,7 @@ async fn foreign_keys_must_work(api: &TestApi) {
                     SqlFamily::Postgres => Some("User_city_fkey".to_owned()),
                     SqlFamily::Mysql => Some("User_ibfk_1".to_owned()),
                     SqlFamily::Sqlite => None,
-                    SqlFamily::Mssql => todo!("Greetings from Redmond"),
+                    SqlFamily::Mssql => Some("User_city_fkey".to_owned()),
                 },
                 columns: vec!["city".to_string()],
                 referenced_columns: vec!["id".to_string()],
@@ -267,7 +273,7 @@ async fn multi_column_foreign_keys_must_work(api: &TestApi) {
                     (SqlFamily::Postgres, _) => Some("User_city_name_fkey".to_owned()),
                     (SqlFamily::Mysql, _) => Some("User_ibfk_1".to_owned()),
                     (SqlFamily::Sqlite, _) => None,
-                    (SqlFamily::Mssql, _) => todo!("Greetings from Redmond"),
+                    (SqlFamily::Mssql, _) => Some("User_city_name_fkey".to_owned()),
                 },
                 columns: vec!["city_name".to_string(), "city".to_string()],
                 referenced_columns: vec!["name".to_string(), "id".to_string(),],
@@ -528,7 +534,11 @@ async fn column_uniqueness_must_be_detected(api: &TestApi) {
             columns: vec!["uniq1".to_string()],
             tpe: IndexType::Unique,
         }),
-        SqlFamily::Mssql => todo!("Greetings from Redmond"),
+        SqlFamily::Mssql => expected_indices.push(Index {
+            name: "uniq1".to_string(),
+            columns: vec!["uniq1".to_string()],
+            tpe: IndexType::Unique,
+        }),
     };
     assert_eq!(
         user_table,

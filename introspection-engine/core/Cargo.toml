@@ -36,9 +36,11 @@ features = ["macros"]
 
 [dev-dependencies]
 pretty_assertions = "0.6.1"
-test-setup = { path = "../../libs/test-setup" }
+test-setup = { path = "../../libs/test-setup", features = ["mssql"] }
 
 [[bin]]
 name = "introspection-engine"
 path = "src/main.rs"
 
+[features]
+mssql = ["sql-introspection-connector/mssql"]
